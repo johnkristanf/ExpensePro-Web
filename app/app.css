@@ -13,3 +13,41 @@ body {
     color-scheme: dark;
   }
 }
+
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+th {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: 1px solid #2563eb;
+  padding: 0.875rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+td {
+  border: 1px solid #dbeafe;
+  padding: 0.875rem;
+  font-size: 0.875rem;
+  background-color: white;
+}
+tbody tr:nth-child(even) {
+  background-color: #eff6ff;
+}
+tbody tr:hover {
+  background-color: #dbeafe;
+  transition: background-color 0.2s ease;
+}
+thead tr {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
