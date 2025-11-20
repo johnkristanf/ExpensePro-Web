@@ -154,11 +154,7 @@ export function ExpenseChatUI() {
     if (isStreaming) {
       return (
         <div>
-          <div className="mb-2 text-xs text-gray-500 italic">Receiving data...</div>
-          <div 
-            ref={containerRef}
-            className="whitespace-pre-wrap font-mono text-xs bg-gray-50 p-3 rounded border border-gray-200 max-h-64 overflow-y-auto"
-          />
+          <div className="mb-2 text-xs text-gray-500 italic">Loading data...</div>
         </div>
       );
     }
