@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { Send, Bot, User } from "lucide-react";
+import HTMLContent from "~/components/html-content-render";
+import { isHTML } from "~/utils";
 
 interface Message {
   role: "user" | "assistant";
@@ -8,7 +10,7 @@ interface Message {
   isStreaming?: boolean;
 }
 
-export function ExpenseChatUI() {
+export function AgentChatbox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -25,18 +27,22 @@ export function ExpenseChatUI() {
 
   const streamFromServer = async (userMessage: string) => {
     if (isStreaming) return; // Prevent duplicate calls
-    
+
     setIsStreaming(true);
     streamingContentRef.current = ""; // Reset streaming content
-    
+
     const userMsg: Message = { role: "user", content: userMessage };
-    setMessages(prev => [...prev, userMsg]);
-    
-    const assistantMsg: Message = { role: "assistant", content: "", isStreaming: true };
-    setMessages(prev => [...prev, assistantMsg]);
+    setMessages((prev) => [...prev, userMsg]);
+
+    const assistantMsg: Message = {
+      role: "assistant",
+      content: "",
+      isStreaming: true,
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/expense/chat", {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/agent/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,9 +54,10 @@ export function ExpenseChatUI() {
 
       if (!response.ok) {
         console.error("Network error");
-        setMessages(prev => {
+        setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1].content = "Error: Unable to connect to server.";
+          updated[updated.length - 1].content =
+            "Error: Unable to connect to server.";
           updated[updated.length - 1].isStreaming = false;
           return updated;
         });
@@ -60,9 +67,10 @@ export function ExpenseChatUI() {
 
       if (!response.body) {
         console.error("Response body is null");
-        setMessages(prev => {
+        setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1].content = "Error: No response from server.";
+          updated[updated.length - 1].content =
+            "Error: No response from server.";
           updated[updated.length - 1].isStreaming = false;
           return updated;
         });
@@ -87,8 +95,8 @@ export function ExpenseChatUI() {
           } else {
             // Accumulate in ref to avoid double rendering issues
             streamingContentRef.current += chunk;
-            
-            setMessages(prev => {
+
+            setMessages((prev) => {
               const updated = [...prev];
               updated[updated.length - 1].content = streamingContentRef.current;
               return updated;
@@ -96,9 +104,9 @@ export function ExpenseChatUI() {
           }
         }
       }
-      
+
       // Mark streaming as complete
-      setMessages(prev => {
+      setMessages((prev) => {
         const updated = [...prev];
         if (updated.length > 0) {
           updated[updated.length - 1].isStreaming = false;
@@ -107,14 +115,15 @@ export function ExpenseChatUI() {
       });
     } catch (error) {
       console.error("Error:", error);
-      setMessages(prev => {
+      setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1].content = "Error: Failed to fetch response.";
+        updated[updated.length - 1].content =
+          "Error: Failed to fetch response.";
         updated[updated.length - 1].isStreaming = false;
         return updated;
       });
     }
-    
+
     setIsStreaming(false);
     streamingContentRef.current = ""; // Clear ref after streaming
   };
@@ -122,55 +131,21 @@ export function ExpenseChatUI() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation(); // Prevent event bubbling
-    
+
     if (!input.trim() || isStreaming) return;
-    
+
     const message = input;
     setInput(""); // Clear input immediately
     streamFromServer(message);
   };
 
-  // Helper to detect if content contains HTML
-  const isHTML = (content: string): boolean => {
-    return /<[a-z][\s\S]*>/i.test(content.trim());
-  };
 
-  // Component to render HTML content properly
-  const HTMLContent = ({ content, isStreaming }: { content: string; isStreaming: boolean }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    
-    useEffect(() => {
-      if (!containerRef.current) return;
-      
-      if (isStreaming) {
-        // During streaming: show raw HTML as code
-        containerRef.current.textContent = content;
-      } else {
-        // After streaming: render as actual HTML
-        containerRef.current.innerHTML = content;
-      }
-    }, [content, isStreaming]);
 
-    if (isStreaming) {
-      return (
-        <div>
-          <div className="mb-2 text-xs text-gray-500 italic">Loading data...</div>
-        </div>
-      );
-    }
-
-    return (
-      <div 
-        ref={containerRef}
-        className="overflow-x-auto"
-      />
-    );
-  };
 
   // Render message content
   const renderContent = (message: Message) => {
     const { content, isStreaming: streaming } = message;
-    
+
     if (!content) {
       return <span className="text-gray-400">...</span>;
     }
@@ -179,16 +154,16 @@ export function ExpenseChatUI() {
       return <HTMLContent content={content} isStreaming={streaming || false} />;
     }
 
-    return (
-        <ReactMarkdown>{content}</ReactMarkdown>
-    );
+    return <ReactMarkdown>{content}</ReactMarkdown>;
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-800">Expense Assistant</h1>
+        <h1 className="text-xl font-semibold text-gray-800">
+          Expense Assistant
+        </h1>
         <p className="text-sm text-gray-500">Ask me about your expenses</p>
       </div>
 
@@ -206,7 +181,7 @@ export function ExpenseChatUI() {
               </p>
             </div>
           )}
-          
+
           {messages.map((message, index) => (
             <div
               key={index}
@@ -215,11 +190,11 @@ export function ExpenseChatUI() {
               }`}
             >
               {message.role === "assistant" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
               )}
-              
+
               <div
                 className={`rounded-lg px-4 py-3 ${
                   message.role === "user"
@@ -233,15 +208,15 @@ export function ExpenseChatUI() {
                   <p className="text-sm">{message.content}</p>
                 )}
               </div>
-              
+
               {message.role === "user" && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
                   <User className="w-5 h-5 text-white" />
                 </div>
               )}
             </div>
           ))}
-          
+
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -269,7 +244,6 @@ export function ExpenseChatUI() {
           </div>
         </form>
       </div>
-
     </div>
   );
 }
